@@ -75,11 +75,15 @@ char callsign[9] = "KC3JLF";  // LOS callsign, MAX 9 CHARACTERS
 #define POWERSAVING      // Enables GPS powersaving mode
 #define TXDELAY 0        // Delay between sentence TX's
 
+//1 is for droppers
+//2 is for reflector
 // Cut variables
 float seaLevelhPa = 1016.8; // pressure at sea level, hPa (yes, hectopascals)
 float CUT_1_ALT = 24615; // cut altitude, m -- 80,000 feet
 float CUT_2_ALT = 27692; //90,000 for reflector
 const int CUT_TIME = 10000; // cut duration, msec
+const int CUT_1_TIMER = -999;//FIX this //msecs
+const int CUT_2_TIMER = -999;//fix this //msecs
 
 // Advanced TX variables (not recommeneded for modification)
 #define ASCII 7          // ASCII 7 or 8
@@ -97,7 +101,7 @@ const int CUT_TIME = 10000; // cut duration, msec
 //Nichrome cutters
 int CUT_1_PIN = 22;
 //fix this pin number
-int CUT_2_PIN = 999;
+int CUT_2_PIN = 999;//fix this
 //end of fix this
 int cut_1_progress = 0; //0 = not started, 1 = in progress, 2 = done
 int cut_2_progress = 0; //0 = not started, 1 = in progress, 2 = done
@@ -274,15 +278,14 @@ void setup()  {
 
   //SD card setup
   Serial.println("Initializing SD card...");
-  if(chipSelect){
-    if(!SD.begin(chipSelect)){
+  if(!SD.begin(chipSelect)){
       Serial.println("ERROR: SD CARD FAILED");
       while(1);
-    }
   }
-  logFile = SD.open("log.csv", FILE_WRITE);
-  logFile.println("Beginning new log at "+String(hour)+":"+String(minute)+":"+String(second));
-  logFile.close();
+  if(logFile = SD.open("log.csv", FILE_WRITE)){
+    logFile.println("Beginning new log at "+String(hour)+":"+String(minute)+":"+String(second));
+    logFile.close();
+  }
   Serial.println("SD card initialized.");
 
   //Gyro setup
@@ -481,38 +484,43 @@ void loop() {
   //Write to SD card
   if(SD.exists("log.csv")) {
     Serial.println("Writing data to log file...");
-    logFile = SD.open("log.csv", FILE_WRITE);
-    logFile.println(data);
-    logFile.close();
+    if(logFile = SD.open("log.csv", FILE_WRITE))
+        logFile.println(data);
+        logFile.close();
+    }
+    else{
+      Serial.println("ERROR: UNABLE TO OPEN LOG FILE");
+    }
   }
   else{
-    Serial.println("ERROR: UNABLE TO OPEN LOG FILE");
+    Serial.println("ERROR: LOG.CSV NON EXISTANT");
   }
+
 
   //Nichrome cutter code
   alt = bmp.readAltitude(seaLevelhPa);
   //cut 1
-  if (alt >= CUT_1_ALT && cut_1_progress == 0){
+  if((alt >= CUT_1_ALT || millis() >= CUT_1_TIMER) && cut_1_progress == 0){
     Serial.println("Cutting 1 begun...");
-    std::cout << "/* message */" << '\n';1_progress = 1; // in progress
+    cut_1_progress = 1; // in progress
     start_1_time = millis();
     digitalWrite(CUT_1_PIN, HIGH);
   }
-  if (cut_1_progress == 1 && (millis()-start_1_time) >= CUT_TIME) {
+  if(cut_1_progress == 1 && (millis()-start_1_time) >= CUT_TIME){
     cut_1_progress = 2; // complete
     digitalWrite(CUT_1_PIN, LOW);
     Serial.println("...cutting 1 complete.");
   }
   //cut 2
-  if(alt >= CUT_2_ALT && cut2_progress == 0){
+  if((alt >= CUT_2_ALT || millis() >= CUT_2_TIMER) && cut2_progress == 0){
       Serial.println("Cutting 2 begun...");
-      cut2_progress = 1; // in progress
+      cut_2_progress = 1; // in progress
       start_2_time = millis();
-      digitalWrite(CUT2_PIN, HIGH);
+      digitalWrite(CUT_2_PIN, HIGH);
   }
-  if (cut2_progress == 1 && (millis()-start_2_time) >= CUT_TIME) {
-      cut2_progress = 2; // complete
-      digitalWrite(CUT2_PIN, LOW);
+  if(cut_2_progress == 1 && (millis()-start_2_time) >= CUT_TIME) {
+      cut_2_progress = 2; // complete
+      digitalWrite(CUT_2_PIN, LOW);
       Serial.println("...cutting 2 complete.");
   }
 
