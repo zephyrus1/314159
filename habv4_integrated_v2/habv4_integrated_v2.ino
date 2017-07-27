@@ -77,8 +77,8 @@ char callsign[9] = "KC3JLF";  // LOS callsign, MAX 9 CHARACTERS
 
 // Cut variables
 float seaLevelhPa = 1016.8; // pressure at sea level, hPa (yes, hectopascals)
-float CUT_ALT_1 = 24615; // cut altitude, m -- 80,000 feet
-float CUT_ALT_2 = 27692; //90,000 for reflector
+float CUT_1_ALT = 24615; // cut altitude, m -- 80,000 feet
+float CUT_2_ALT = 27692; //90,000 for reflector
 const int CUT_TIME = 10000; // cut duration, msec
 
 // Advanced TX variables (not recommeneded for modification)
@@ -95,12 +95,12 @@ const int CUT_TIME = 10000; // cut duration, msec
 //---Private Variables---------------------------------------------------------------------------------------------------------
 
 //Nichrome cutters
-int CUT1_PIN = 22;
+int CUT_1_PIN = 22;
 //fix this pin number
-int CUT2_PIN = 999;
+int CUT_2_PIN = 999;
 //end of fix this
-int cut1_progress = 0; //0 = not started, 1 = in progress, 2 = done
-int cut2_progress = 0; //0 = not started, 1 = in progress, 2 = done
+int cut_1_progress = 0; //0 = not started, 1 = in progress, 2 = done
+int cut_2_progress = 0; //0 = not started, 1 = in progress, 2 = done
 long start_1_time = 0;
 long start_2_time = 0;
 
@@ -225,7 +225,8 @@ void setup()  {
   pinMode(MTX2_ENABLE, OUTPUT);
   pinMode(GPS_ON, OUTPUT);
   pinMode(BATTERY_ADC, INPUT);
-  pinMode(CUT1_PIN, OUTPUT); //Cutter
+  pinMode(CUT_1_PIN, OUTPUT); //Cutter
+  pinMode(CUT_2_PIN, OUTPUT); //Cutter
   pinMode(3, INPUT); //junk pin
   blinkled(2);
 
@@ -491,19 +492,19 @@ void loop() {
   //Nichrome cutter code
   alt = bmp.readAltitude(seaLevelhPa);
   //cut 1
-  if (alt >= CUT_ALT_1 && cut1_progress == 0){
+  if (alt >= CUT_1_ALT && cut_1_progress == 0){
     Serial.println("Cutting 1 begun...");
-    cut1_progress = 1; // in progress
+    std::cout << "/* message */" << '\n';1_progress = 1; // in progress
     start_1_time = millis();
-    digitalWrite(CUT1_PIN, HIGH);
+    digitalWrite(CUT_1_PIN, HIGH);
   }
-  if (cut1_progress == 1 && (millis()-start_1_time) >= CUT_TIME) {
-    cut1_progress = 2; // complete
-    digitalWrite(CUT1_PIN, LOW);
+  if (cut_1_progress == 1 && (millis()-start_1_time) >= CUT_TIME) {
+    cut_1_progress = 2; // complete
+    digitalWrite(CUT_1_PIN, LOW);
     Serial.println("...cutting 1 complete.");
   }
   //cut 2
-  if(alt >= CUT_ALT_2 && cut2_progress == 0){
+  if(alt >= CUT_2_ALT && cut2_progress == 0){
       Serial.println("Cutting 2 begun...");
       cut2_progress = 1; // in progress
       start_2_time = millis();
