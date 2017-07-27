@@ -77,7 +77,8 @@ char callsign[9] = "KC3JLF";  // LOS callsign, MAX 9 CHARACTERS
 
 // Cut variables
 float seaLevelhPa = 1016.8; // pressure at sea level, hPa (yes, hectopascals)
-float CUT_ALT = 20000; // cut altitude, m
+float CUT_ALT_1 = 24615; // cut altitude, m -- 80,000 feet
+float CUT_ALT_2 = 27692; //90,000 for reflector
 const int CUT_TIME = 10000; // cut duration, msec
 
 // Advanced TX variables (not recommeneded for modification)
@@ -95,8 +96,13 @@ const int CUT_TIME = 10000; // cut duration, msec
 
 //Nichrome cutters
 int CUT1_PIN = 22;
+//fix this pin number
+int CUT2_PIN = 999;
+//end of fix this
 int cut1_progress = 0; //0 = not started, 1 = in progress, 2 = done
-unsigned long start_time = 0.0;
+int cut2_progress = 0; //0 = not started, 1 = in progress, 2 = done
+long start_1_time = 0;
+long start_2_time = 0;
 
 //Sensors
 #include <Wire.h>
@@ -484,24 +490,36 @@ void loop() {
 
   //Nichrome cutter code
   alt = bmp.readAltitude(seaLevelhPa);
-
-  if (alt >= CUT_ALT && cut1_progress == 0){
-    Serial.println("Cutting begun...");
+  //cut 1
+  if (alt >= CUT_ALT_1 && cut1_progress == 0){
+    Serial.println("Cutting 1 begun...");
     cut1_progress = 1; // in progress
-    start_time = millis();
+    start_1_time = millis();
     digitalWrite(CUT1_PIN, HIGH);
   }
-  if (cut1_progress == 1 && (millis()-start_time) >= CUT_TIME) {
+  if (cut1_progress == 1 && (millis()-start_1_time) >= CUT_TIME) {
     cut1_progress = 2; // complete
     digitalWrite(CUT1_PIN, LOW);
-    Serial.println("...cutting complete.");
+    Serial.println("...cutting 1 complete.");
+  }
+  //cut 2
+  if(alt >= CUT_ALT_2 && cut2_progress == 0){
+      Serial.println("Cutting 2 begun...");
+      cut2_progress = 1; // in progress
+      start_2_time = millis();
+      digitalWrite(CUT2_PIN, HIGH);
+  }
+  if (cut2_progress == 1 && (millis()-start_2_time) >= CUT_TIME) {
+      cut2_progress = 2; // complete
+      digitalWrite(CUT2_PIN, LOW);
+      Serial.println("...cutting 2 complete.");
   }
 
   /*
   //Add more cutdowns here
   */
 
-  Serial.println(millis()-start_time);
+  //Serial.println(millis()-start__time);
 
   delay(250); // get rid of this?
 }
