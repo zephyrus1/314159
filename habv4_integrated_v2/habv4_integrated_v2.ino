@@ -121,6 +121,7 @@ long start_2_time = 0;
 #include <DallasTemperature.h>
 #include <SoftwareSerial.h>
 #include "ax25modem.h"
+//#include "habv4_gps.h"
 static const uint8_t PROGMEM _sine_table[] = {
   #include "sine_table.h"
 };
@@ -218,6 +219,7 @@ char comment[3]={
   ' ', ' ', '\0'};
 
 //---Setup---------------------------------------------------------------------------------------------------------
+void blinkled(int blinks);
 
 void setup()  {
 
@@ -484,7 +486,7 @@ void loop() {
   //Write to SD card
   if(SD.exists("log.csv")) {
     Serial.println("Writing data to log file...");
-    if(logFile = SD.open("log.csv", FILE_WRITE))
+    if(logFile = SD.open("log.csv", FILE_WRITE)){
         logFile.println(data);
         logFile.close();
     }
@@ -512,13 +514,13 @@ void loop() {
     Serial.println("...cutting 1 complete.");
   }
   //cut 2
-  if((alt >= CUT_2_ALT || millis() >= CUT_2_TIMER) && cut2_progress == 0){
+  if((alt >= CUT_2_ALT || millis() >= CUT_2_TIMER) && cut_2_progress == 0){
       Serial.println("Cutting 2 begun...");
       cut_2_progress = 1; // in progress
       start_2_time = millis();
       digitalWrite(CUT_2_PIN, HIGH);
   }
-  if(cut_2_progress == 1 && (millis()-start_2_time) >= CUT_TIME) {
+  if(cut_2_progress == 1 && (millis()-start_2_time) >= CUT_TIME){
       cut_2_progress = 2; // complete
       digitalWrite(CUT_2_PIN, LOW);
       Serial.println("...cutting 2 complete.");
