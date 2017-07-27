@@ -3,61 +3,61 @@
  Keenan Albee
  Seth Eisner
  Modified from HABduino v4 software.
- 
+
  This code allows simulataneous APRS and 434.485 MHz transmission using an Arduino Mega and HABduino shield. It is Arduino MEGA compatible, unlike the original software.
  The Arduino MEGA uses TIMER2 to perform PWM on pins 9 and 10, as opposed to pins 2,3 and 5 on the Uno. The timer regsters and ISR for TIMER2 have been updated to trigger pin 10 on overflow.
  HABduino shields will need pins 3 and 10 connected together for successful APRS use.
 
  This code reorganizes the HABduino v4 codebase into a more readable format. Useful modifiable variables are listed at the top, and relevant methods have been moved to separate files.
- 
+
  An option to control a relay shield through an altitude trigger is also included, along with a sensor suite over I2C.
 
  ---
- 
+
  HABDuino Tracker
  http://www.habduino.org
- (c) Anthony Stirk M0UPU 
- 
+ (c) Anthony Stirk M0UPU
+
  March 2015 Version 4.0.0
- 
+
  This is for the Version 4 Habduino Hardware.
- 
+
  Credits :
- 
+
  Interrupt Driven RTTY Code : Evolved from Rob Harrison's RTTY Code.
  Thanks to :  http://www.engblaze.com/microcontroller-tutorial-avr-and-arduino-timer-interrupts/
  http://gammon.com.au/power
- 
+
  Suggestion to lock variables when making the telemetry string & Compare match register calculation from Phil Heron.
  APRS Code mainly by Phil Heron MI0VIM
- 
+
  GPS Code modified from jonsowman and Joey flight computer CUSF
  https://github.com/cuspaceflight/joey-m/tree/master/firmware
- 
+
  Thanks to :
- 
+
  Phil Heron
  James Coxon
  Dave Akerman
- 
+
  The UKHAS Community http://ukhas.org.uk
- 
+
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
- 
+
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  See <http://www.gnu.org/licenses/>.
-  
+
  The hardware design & code for Habduino is released under a Creative Commons License 3.0 Attribution-ShareAlike License :
  See : http://creativecommons.org/licenses/by-sa/3.0/
  It is YOUR responsibility to ensure this kit is used safely please review the safety section.
- 
+
  The latest code is available here : https://github.com/HABduino/HABduino
 */
 
@@ -70,7 +70,7 @@
 
 // TX variables
 #define MTX2_FREQ 434.485 // LOS frequency, format 434.XXX
-#define APRS_CALLSIGN "KC3JLF" // APRS callsign 
+#define APRS_CALLSIGN "KC3JLF" // APRS callsign
 char callsign[9] = "KC3JLF";  // LOS callsign, MAX 9 CHARACTERS
 #define POWERSAVING      // Enables GPS powersaving mode
 #define TXDELAY 0        // Delay between sentence TX's
@@ -88,7 +88,7 @@ const int CUT_TIME = 10000; // cut duration, msec
 #define TABLE_SIZE     (512)
 #define PREAMBLE_BYTES (50)
 #define REST_BYTES     (5)
-//#define MTX2_SHIFT 425         // Uncomment to use  
+//#define MTX2_SHIFT 425         // Uncomment to use
 //#define MTX2_OFFSET 0          // Uncomment to use: 0-100 Slightly adjusts the frequency by increasing the PWM
 
 //---Private Variables---------------------------------------------------------------------------------------------------------
@@ -127,6 +127,7 @@ static const uint8_t PROGMEM _sine_table[] = {
 #include <Adafruit_BMP280.h> //PRESSURE & TEMPERATURE
 
 File logFile;
+String data = "";
 
 float latitude_  = -999.0;
 float longitude_ = -999.0;
@@ -181,17 +182,17 @@ int errorstatus=0;
  Bit 1 = GPS Error Condition Noted Cold Boot GPS
  Bit 2 = DS18B20 temp sensor status 0 = OK 1 = Fault
  Bit 3 = Current Dynamic Model 0 = Flight 1 = Pedestrian
- Bit 4 = PSM Status 0 = PSM On 1 = PSM Off                   
+ Bit 4 = PSM Status 0 = PSM On 1 = PSM Off
  Bit 5 = Lock 0 = GPS Locked 1= Not Locked
- 
- So error 8 means the everything is fine just the GPS is in pedestrian mode. 
- Below 1000 meters the code puts the GPS in the more accurate pedestrian mode. 
- Above 1000 meters it switches to dynamic model 6 i.e flight mode and turns the LED's off for additional power saving. 
- So as an example error code 40 = 101000 means GPS not locked and in pedestrian mode. 
+
+ So error 8 means the everything is fine just the GPS is in pedestrian mode.
+ Below 1000 meters the code puts the GPS in the more accurate pedestrian mode.
+ Above 1000 meters it switches to dynamic model 6 i.e flight mode and turns the LED's off for additional power saving.
+ So as an example error code 40 = 101000 means GPS not locked and in pedestrian mode.
  */
 
 char txstring[100];
-uint8_t buf[60]; 
+uint8_t buf[60];
 
 uint8_t lock =0, sats = 0, hour = 0, minute = 0, second = 0;
 uint8_t oldhour = 0, oldminute = 0, oldsecond = 0;
@@ -199,7 +200,7 @@ int GPSerror = 0,navmode = 0,psm_status = 0,lat_int=0,lon_int=0,tempsensors,temp
 int32_t lat = 0, lon = 0, alt = 0, maxalt = 0, lat_dec = 0, lon_dec =0 ,tslf=0;
 unsigned long currentMillis;
 long previousMillis = 0;
-int batteryadc_v,battvaverage=0,aprstxstatus=0; 
+int batteryadc_v,battvaverage=0,aprstxstatus=0;
 int32_t battvsmooth[5] ;
 int aprs_tx_status = 0, aprs_attempts = 0;
 unsigned long startTime;
@@ -209,7 +210,7 @@ char comment[3]={
 //---Setup---------------------------------------------------------------------------------------------------------
 
 void setup()  {
-  
+
   //Pin setup, NOTE: blinkled is a debugging helper to show completion of code
   pinMode(MTX2_TXD, OUTPUT);
   pinMode(LED_WARN, OUTPUT);
@@ -221,7 +222,7 @@ void setup()  {
   pinMode(CUT1_PIN, OUTPUT); //Cutter
   pinMode(3, INPUT); //junk pin
   blinkled(2);
-  
+
   Serial.begin(9600);
   #ifdef LOS
     setMTX2Frequency();
@@ -233,7 +234,7 @@ void setup()  {
     //GPS activate
     digitalWrite(GPS_ON,HIGH);
     blinkled(2);
-    
+
     //GPS reset
     resetGPS();
     blinkled(2);
@@ -247,7 +248,7 @@ void setup()  {
     ax25_init();
     blinkled(2);
   #endif
-  
+
   //GPS setup
   #ifdef GPS
     setupGPS();
@@ -263,7 +264,7 @@ void setup()  {
   /*
   Sensor setup
   */
-  
+
   //SD card setup
   Serial.println("Initializing SD card...");
   if(chipSelect){
@@ -313,7 +314,7 @@ void setup()  {
   //Completion of sensor setup
   Serial.println("Sensors initialized.");
   blinkled(2);
-} 
+}
 
 //---Loop---------------------------------------------------------------------------------------------------------
 
@@ -328,7 +329,7 @@ void loop() {
   #endif
 
   //APRS send, NOTE: needs sufficient satellite count
-  #ifdef APRS 
+  #ifdef APRS
     if(sats>=4){ //MODIFIED
       if (aprs_tx_status==0)
       {
@@ -341,7 +342,7 @@ void loop() {
         Serial.println("Sent APRS.");
         aprs_attempts++;
       }
-    }  
+    }
   #endif
 
   //GPS checks
@@ -353,7 +354,7 @@ void loop() {
       errorstatus &= ~(1 << 5); // Unset bit 5 (Lock 0 = GPS Locked 1= Not Locked)
     }
     checkDynamicModel();
-  
+
     //Powersaving mode
     #ifdef POWERSAVING
       if((lock==3) && (psm_status==0) && (sats>=5) &&((errorstatus & (1 << 0))==0)&&((errorstatus & (1 << 1))==0)) { // Check we aren't in an error condition
@@ -363,7 +364,7 @@ void loop() {
         errorstatus &= ~(1 << 4); // Set Bit 4 Indicating PSM is on
       }
     #endif
-    
+
     if(!lockvariables) {
       prepare_data();
       if(alt>maxalt && sats >= 4)
@@ -402,19 +403,19 @@ void loop() {
   Data gathering for CSV
   */
 
-  String data = "";
-  
+  data = "";
+
   sensors_event_t   event;
   sensors_event_t   accel_event;
   sensors_event_t   mag_event;
   sensors_vec_t     orientation;
-  
+
   gyro.getEvent(&event);
   accel.getEvent(&accel_event);
   mag.getEvent(&mag_event);
 
   lsm.read();
-  
+
   data = data + String(hour)                    +':';
   data = data + String(minute)                  +':';
   data = data + String(second)                  +',';
@@ -483,14 +484,14 @@ void loop() {
 
   //Nichrome cutter code
   alt = bmp.readAltitude(seaLevelhPa);
-  
+
   if (alt >= CUT_ALT && cut1_progress == 0){
     Serial.println("Cutting begun...");
     cut1_progress = 1; // in progress
     start_time = millis();
     digitalWrite(CUT1_PIN, HIGH);
   }
-  else if (cut1_progress == 1 && (millis()-start_time) > CUT_TIME) {
+  if (cut1_progress == 1 && (millis()-start_time) >= CUT_TIME) {
     cut1_progress = 2; // complete
     digitalWrite(CUT1_PIN, LOW);
     Serial.println("...cutting complete.");
@@ -499,9 +500,9 @@ void loop() {
   /*
   //Add more cutdowns here
   */
-  
+
   Serial.println(millis()-start_time);
-  
+
   delay(250); // get rid of this?
 }
 
@@ -513,8 +514,8 @@ void blinkled(int blinks) {
     wait(100);
     digitalWrite(LED_WARN,LOW);
     wait(100);
-  }    
-}    
+  }
+}
 
 void wait(unsigned long delaytime) {
   // Arduino Delay doesn't get CPU Speeds below 8Mhz
@@ -541,7 +542,7 @@ void prepare_data() {
     {
       errorstatus &= ~(1 << 2); // Unset bit 2 indicating temp sensor is ok.
     }
-  } 
+  }
   gps_check_lock();
   gps_get_position();
   gps_get_time();
