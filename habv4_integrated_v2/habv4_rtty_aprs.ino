@@ -216,26 +216,26 @@ ISR(TIMER1_COMPA_vect) {
 //===Modified for Mega================================================
 
   //Intrerrupt handler for RTTY on TIMER1
-  if(alt>1000 && sats >= 4)
+  if(alt>1000) // if above 1000m
   {
     digitalWrite(LED_WARN,LOW);  
     digitalWrite(LED_OK,LOW);  
   }
-  else 
+  else // if below 1000m
   {
     currentMillis = millis();
     if(currentMillis - previousMillis > ONE_SECOND) 
     {
       previousMillis = currentMillis;   
-      if(errorstatus!=8)
+      if((errorstatus & (1 << 5)) == 0) // if have GPS lock (errorstatus bit 5 is 0)
       {
-        digitalWrite(LED_WARN,!digitalRead(LED_WARN));
-        digitalWrite(LED_OK,LOW);  
+        digitalWrite(LED_WARN,LOW);
+        digitalWrite(LED_OK,!digitalRead(LED_OK));  
       }
-      else 
+      else  // if do not have GPS lock
       {
-        digitalWrite(LED_OK, !digitalRead(LED_OK)); 
-        digitalWrite(LED_WARN,LOW);    
+        digitalWrite(LED_OK,LOW);
+        digitalWrite(LED_WARN,!digitalRead(LED_WARN));     
       }
     }
   }

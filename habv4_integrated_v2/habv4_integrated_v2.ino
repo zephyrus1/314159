@@ -77,16 +77,16 @@ char callsign[9] = "KC3JLF";  // LOS callsign, MAX 9 CHARACTERS
 
 // Cut variables
 float seaLevelhPa = 1016.8; // pressure at sea level, hPa (yes, hectopascals)
-const float CUT_1_ALT = 24615; // cut altitude, m -- 80,000 feet
-const float CUT_2_ALT = 27692; //90,000 for reflector
+const float CUT_1_ALT = 370; //24615; // cut altitude, m -- 80,000 feet
+const float CUT_2_ALT = 375; //27692; //90,000 for reflector
 
-const int CUT_1_LEN = 10000; // cut duration, msec
-const int CUT_2_LEN = 10000; // cut duration, msec
-const int CUT_3_LEN = 10000; // cut duration, msec
+const int CUT_1_LEN = 10; // cut duration, sec
+const int CUT_2_LEN = 10; // cut duration, sec
+const int CUT_3_LEN = 10; // cut duration, sec
 
-const int CUT_1_TIMER = -999;//FIX this //msecs
-const int CUT_2_TIMER = -999;//fix this //msecs
-const int CUT_3_TIMER = -999;//fix this //msecs
+const unsigned long CUT_1_TIMER = -1; // max countdown until cut, secs
+const unsigned long CUT_2_TIMER = -1; // max countdown until cut, secs
+const unsigned long CUT_3_TIMER = 300; // max countdown until cutn, secs
 
 // Advanced TX variables (not recommeneded for modification)
 #define ASCII 7          // ASCII 7 or 8
@@ -103,10 +103,8 @@ const int CUT_3_TIMER = -999;//fix this //msecs
 
 //Nichrome cutters
 const int CUT_1_PIN = 22;
-//fix this pin number
-const int CUT_2_PIN = 999;//fix this
-const int CUT_3_PIN = 999;//fix this, emergency cutter
-//end of fix this
+const int CUT_2_PIN = 23;
+const int CUT_3_PIN = 24;
 
 int cut_1_progress = 0; //0 = not started, 1 = in progress, 2 = done
 int cut_2_progress = 0; //0 = not started, 1 = in progress, 2 = done
@@ -195,7 +193,7 @@ volatile boolean lockvariables = 0;
 volatile static uint8_t *_txbuf = 0;
 volatile static uint8_t  _txlen = 0;
 
-int errorstatus = 0;
+int errorstatus = 32; // start with no GPS lock set (bit 5 == 1)
 /* Error Status Bit Level Field :
   Bit 0 = GPS Error Condition Noted Switch to Max Performance Mode
   Bit 1 = GPS Error Condition Noted Cold Boot GPS
@@ -231,7 +229,6 @@ char comment[3] = {
 void blinkled(int blinks);
 
 void setup()  {
-
   //Pin setup, NOTE: blinkled is a debugging helper to show completion of code
   pinMode(MTX2_TXD, OUTPUT);
   pinMode(LED_WARN, OUTPUT);
@@ -240,26 +237,31 @@ void setup()  {
   pinMode(MTX2_ENABLE, OUTPUT);
   pinMode(GPS_ON, OUTPUT);
   pinMode(BATTERY_ADC, INPUT);
-  pinMode(CUT_1_PIN, OUTPUT); //Cutter
-  pinMode(CUT_2_PIN, OUTPUT); //Cutter
-  pinMode(3, INPUT); //junk pin
-  blinkled(2);
+  pinMode(CUT_1_PIN, OUTPUT); // dropper
+  pinMode(CUT_2_PIN, OUTPUT); // reflector
+  pinMode(CUT_3_PIN, OUTPUT); // cutdown
+  pinMode(3, INPUT); // junk pin, overidden on HABduino by pin 10 connection
+
+  //Initalization visual indicator
+  digitalWrite(LED_WARN, HIGH);
+  digitalWrite(LED_OK, HIGH);
+  wait(5000);
+  digitalWrite(LED_WARN, LOW);
+  digitalWrite(LED_OK, LOW);
 
   Serial.begin(9600);
+  Serial.println(CUT_3_TIMER);
 #ifdef LOS
   setMTX2Frequency();
   digitalWrite(MTX2_ENABLE, HIGH);
-  blinkled(2);
 #endif
 
 #ifdef GPS
   //GPS activate
   digitalWrite(GPS_ON, HIGH);
-  blinkled(2);
 
   //GPS reset
   resetGPS();
-  blinkled(2);
 #endif GPS
 
   //APRS setup
@@ -268,16 +270,12 @@ void setup()  {
 #endif
 #ifdef APRS
   ax25_init();
-  blinkled(2);
 #endif
 
   //GPS setup
 #ifdef GPS
   setupGPS();
-  blinkled(2);
 #endif GPS
-
-  initialise_interrupt();
 
   //I2C setup
   sensors.begin();
@@ -333,13 +331,21 @@ void setup()  {
   Serial.println("LSM303 initialized.");
 
   //Completion of sensor setup
-  Serial.println("Sensors initialized.");
-  blinkled(2);
+  Serial.println(">>>Setup complete.<<<");
+  blinkled(5);
+  wait(1000);
+
+  //Begin RTTY interrupt TIMER1
+  initialise_interrupt();
 }
 
 //---Loop---------------------------------------------------------------------------------------------------------
 
 void loop() {
+  //---Serial information
+  Serial.println(millis()/1000);
+  //---
+  
   oldhour = hour;
   oldminute = minute;
   oldsecond = second;
@@ -509,17 +515,18 @@ void loop() {
 
   //Nichrome cutter code
   alt = bmp.readAltitude(seaLevelhPa);
+  
   //cut 1
-  if((alt >= CUT_1_ALT || millis() >= CUT_1_TIMER) && cut_1_progress == 0){
+  if((alt >= CUT_1_ALT || millis()/1000 >= CUT_1_TIMER) && cut_1_progress == 0) {
     Serial.println("Cut 1 begun...");
     cut_1_progress = 1; // in progress
-    cut_1_start_time = millis();
+    cut_1_start_time = millis()/1000;
     digitalWrite(CUT_1_PIN, HIGH);
 
+    //record to SD
     if (SD.exists("log.csv")) {
-      Serial.println("Writing data to log file...");
       if (logFile = SD.open("log.csv", FILE_WRITE)) {
-        logFile.println("Starting cut for droppers");
+        logFile.println("Cut 1 begun...");
         logFile.close();
       }
       else {
@@ -527,36 +534,35 @@ void loop() {
       }
     }
     else {
-      Serial.println("ERROR: LOG.CSV NON EXISTANT");
-    }
-    
+      Serial.println("ERROR: LOG.CSV NON EXISTENT");
+    } 
   }
-  
-  if(cut_1_progress == 1 && (millis()-cut_1_start_time) >= CUT_1_LEN){
+  else if(cut_1_progress == 1 && (millis()/1000 - cut_1_start_time) >= CUT_1_LEN) {
     cut_1_progress = 2; // complete
     digitalWrite(CUT_1_PIN, LOW);
     Serial.println("...cut 1 complete.");
   }
   //cut 2
-  if((alt >= CUT_2_ALT || millis() >= CUT_2_TIMER) && cut_2_progress == 0){
+  if((alt >= CUT_2_ALT || millis()/1000 >= CUT_2_TIMER) && cut_2_progress == 0) {
       Serial.println("Cut 2 begun...");
       cut_2_progress = 1; // in progress
-      cut_2_start_time = millis();
+      cut_2_start_time = millis()/1000;
       digitalWrite(CUT_2_PIN, HIGH);
   }
-  if(cut_2_progress == 1 && (millis()-cut_2_start_time) >= CUT_2_LEN){
+  else if(cut_2_progress == 1 && (millis()/1000 - cut_2_start_time) >= CUT_2_LEN) {
       cut_2_progress = 2; // complete
       digitalWrite(CUT_2_PIN, LOW);
       Serial.println("...cut 2 complete.");
   }
+  
   //cut 3
-  if((millis() >= CUT_3_TIMER) && cut_3_progress == 0){
+  if((millis()/1000 >= CUT_3_TIMER) && cut_3_progress == 0) {
       Serial.println("Cut 3 begun...");
       cut_3_progress = 1; // in progress
-      cut_3_start_time = millis();
+      cut_3_start_time = millis()/1000;
       digitalWrite(CUT_3_PIN, HIGH);
   }
-  if(cut_3_progress == 1 && (millis()-cut_3_start_time) >= CUT_3_LEN){
+  else if(cut_3_progress == 1 && (millis()/1000 - cut_3_start_time) >= CUT_3_LEN) {
       cut_3_progress = 2; // complete
       digitalWrite(CUT_3_PIN, LOW);
       Serial.println("...cut 3 complete.");
@@ -568,9 +574,9 @@ void loop() {
 void blinkled(int blinks) {
   for (int blinkledx = 0; blinkledx < blinks; blinkledx++) {
     digitalWrite(LED_WARN, HIGH);
-    wait(100);
+    wait(150);
     digitalWrite(LED_WARN, LOW);
-    wait(100);
+    wait(150);
   }
 }
 
