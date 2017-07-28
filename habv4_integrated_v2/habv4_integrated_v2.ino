@@ -68,13 +68,6 @@
 //#define LOS     // Comment to turn off LOS (line of sight)
 #define GPS     // Comment to turn off GPS
 
-////THIS IS A TEST
-const int voltPin = 8;
-const float MAXVOLTS = 35.00;
-float voltage = 0.0;
-
-///END OF A TEST
-
 // TX variables
 #define MTX2_FREQ 434.485 // LOS frequency, format 434.XXX
 #define APRS_CALLSIGN "KC3JLF" // APRS callsign
@@ -82,11 +75,8 @@ char callsign[9] = "KC3JLF";  // LOS callsign, MAX 9 CHARACTERS
 #define POWERSAVING      // Enables GPS powersaving mode
 #define TXDELAY 0        // Delay between sentence TX's
 
-//1 is for droppers
-//2 is for reflector
 // Cut variables
 float seaLevelhPa = 1016.8; // pressure at sea level, hPa (yes, hectopascals)
-<<<<<<< HEAD
 const float CUT_1_ALT = 24615; // cut altitude, m -- 80,000 feet
 const float CUT_2_ALT = 27692; //90,000 for reflector
 
@@ -97,8 +87,6 @@ const int CUT_3_LEN = 10000; // cut duration, msec
 const int CUT_1_TIMER = -999;//FIX this //msecs
 const int CUT_2_TIMER = -999;//fix this //msecs
 const int CUT_3_TIMER = -999;//fix this //msecs
-=======
->>>>>>> 24fa8d7766ea4c9467db56a354ac9ef21f1cf128
 
 // Advanced TX variables (not recommeneded for modification)
 #define ASCII 7          // ASCII 7 or 8
@@ -114,15 +102,12 @@ const int CUT_3_TIMER = -999;//fix this //msecs
 //---Private Variables---------------------------------------------------------------------------------------------------------
 
 //Nichrome cutters
-<<<<<<< HEAD
 const int CUT_1_PIN = 22;
 //fix this pin number
 const int CUT_2_PIN = 999;//fix this
 const int CUT_3_PIN = 999;//fix this, emergency cutter
 //end of fix this
 
-=======
->>>>>>> 24fa8d7766ea4c9467db56a354ac9ef21f1cf128
 int cut_1_progress = 0; //0 = not started, 1 = in progress, 2 = done
 int cut_2_progress = 0; //0 = not started, 1 = in progress, 2 = done
 int cut_3_progress = 0; //0 = not started, 1 = in progress, 2 = done
@@ -508,34 +493,25 @@ void loop() {
   Serial.println(String(data)); //data = hour:minute:second,millis,lat(deg),lon(deg),GPS alt(m),external sensor temp(C),pressure(hPa),barometer alt (m),x_accel,y_accel,z_accel,x_mag,y_mag,z_mag,z_rate,y_rate,x_rate,roll,pitch,yaw
 
   //Write to SD card
-<<<<<<< HEAD
   if(SD.exists("log.csv")) {
     if(logFile = SD.open("log.csv", FILE_WRITE)){
         logFile.println(data);
         logFile.close();
-=======
->>>>>>> 24fa8d7766ea4c9467db56a354ac9ef21f1cf128
     }
     else {
       Serial.println("ERROR: UNABLE TO OPEN LOG FILE");
     }
   }
-<<<<<<< HEAD
-=======
   else {
-    Serial.println("ERROR: LOG.CSV NON EXISTANT");
->>>>>>> 24fa8d7766ea4c9467db56a354ac9ef21f1cf128
+    Serial.println("ERROR: LOG.CSV NON EXISTENT");
   }
 
 
   //Nichrome cutter code
   alt = bmp.readAltitude(seaLevelhPa);
   //cut 1
-<<<<<<< HEAD
   if((alt >= CUT_1_ALT || millis() >= CUT_1_TIMER) && cut_1_progress == 0){
     Serial.println("Cut 1 begun...");
-=======
->>>>>>> 24fa8d7766ea4c9467db56a354ac9ef21f1cf128
     cut_1_progress = 1; // in progress
     cut_1_start_time = millis();
     digitalWrite(CUT_1_PIN, HIGH);
@@ -555,7 +531,7 @@ void loop() {
     }
     
   }
-<<<<<<< HEAD
+  
   if(cut_1_progress == 1 && (millis()-cut_1_start_time) >= CUT_1_LEN){
     cut_1_progress = 2; // complete
     digitalWrite(CUT_1_PIN, LOW);
@@ -585,11 +561,6 @@ void loop() {
       digitalWrite(CUT_3_PIN, LOW);
       Serial.println("...cut 3 complete.");
   }
-  Serial.println(String(analogRead(voltPin)));
-  voltage = (float)analogRead(voltPin) * (MAXVOLTS / 1024.0);
-  Serial.println(String(voltage, 1) + 'V');
-=======
->>>>>>> 24fa8d7766ea4c9467db56a354ac9ef21f1cf128
 }
 
 //---Helper code----------------------------------------------------------------------------------------------
@@ -638,10 +609,5 @@ void prepare_data() {
   battvsmooth[2] = battvsmooth[1];
   battvsmooth[1] = battvsmooth[0];
   battvsmooth[0] = batteryadc_v;
-<<<<<<< HEAD
   battvaverage = (battvsmooth[0]+battvsmooth[1]+ battvsmooth[2]+battvsmooth[3]+battvsmooth[4])/5;
 }
-=======
-  battvaverage = (battvsmooth[0] + battvsmooth[1] + battvsmooth[2] + battvsmooth[3] + battvsmooth[4]) / 5;
-}
->>>>>>> 24fa8d7766ea4c9467db56a354ac9ef21f1cf128
