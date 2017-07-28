@@ -53,11 +53,12 @@ void loop() {
 
   Serial.println(String(analogRead(voltPin)));
   voltage = (float)analogRead(voltPin) * (MAXVOLTS / 1024.0);
-  dataString = String(voltage, 1) + 'V';
+  dataString = String(millis()/1000)+',';
+  dataString += String(voltage, 1) + 'V';
 
   // open the file. note that only one file can be open at a time,
   // so you have to close this one before opening another.
-  File dataFile = SD.open("datalog.txt", FILE_WRITE);
+  File dataFile = SD.open("voltlog.txt", FILE_WRITE);
 
   // if the file is available, write to it:
   if (dataFile) {
