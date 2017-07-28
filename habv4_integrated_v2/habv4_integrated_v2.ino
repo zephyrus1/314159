@@ -79,11 +79,16 @@ char callsign[9] = "KC3JLF";  // LOS callsign, MAX 9 CHARACTERS
 //2 is for reflector
 // Cut variables
 float seaLevelhPa = 1016.8; // pressure at sea level, hPa (yes, hectopascals)
-float CUT_1_ALT = 24615; // cut altitude, m -- 80,000 feet
-float CUT_2_ALT = 27692; //90,000 for reflector
-const int CUT_TIME = 10000; // cut duration, msec
+const float CUT_1_ALT = 24615; // cut altitude, m -- 80,000 feet
+const float CUT_2_ALT = 27692; //90,000 for reflector
+
+const int CUT_1_LEN = 10000; // cut duration, msec
+const int CUT_2_LEN = 10000; // cut duration, msec
+const int CUT_3_LEN = 10000; // cut duration, msec
+
 const int CUT_1_TIMER = -999;//FIX this //msecs
 const int CUT_2_TIMER = -999;//fix this //msecs
+const int CUT_3_TIMER = -999;//fix this //msecs
 
 // Advanced TX variables (not recommeneded for modification)
 #define ASCII 7          // ASCII 7 or 8
@@ -99,14 +104,19 @@ const int CUT_2_TIMER = -999;//fix this //msecs
 //---Private Variables---------------------------------------------------------------------------------------------------------
 
 //Nichrome cutters
-int CUT_1_PIN = 22;
+const int CUT_1_PIN = 22;
 //fix this pin number
-int CUT_2_PIN = 999;//fix this
+const int CUT_2_PIN = 999;//fix this
+const int CUT_3_PIN = 999;//fix this, emergency cutter
 //end of fix this
+
 int cut_1_progress = 0; //0 = not started, 1 = in progress, 2 = done
 int cut_2_progress = 0; //0 = not started, 1 = in progress, 2 = done
-long start_1_time = 0;
-long start_2_time = 0;
+int cut_3_progress = 0; //0 = not started, 1 = in progress, 2 = done
+
+long cut_1_start_time = 0;
+long cut_2_start_time = 0;
+long cut_3_start_time = 0;
 
 //Sensors
 #include <Wire.h>
@@ -121,7 +131,7 @@ long start_2_time = 0;
 #include <DallasTemperature.h>
 #include <SoftwareSerial.h>
 #include "ax25modem.h"
-//#include "habv4_gps.h"
+
 static const uint8_t PROGMEM _sine_table[] = {
   #include "sine_table.h"
 };
@@ -485,7 +495,6 @@ void loop() {
 
   //Write to SD card
   if(SD.exists("log.csv")) {
-    Serial.println("Writing data to log file...");
     if(logFile = SD.open("log.csv", FILE_WRITE)){
         logFile.println(data);
         logFile.close();
@@ -495,7 +504,7 @@ void loop() {
     }
   }
   else{
-    Serial.println("ERROR: LOG.CSV NON EXISTANT");
+    Serial.println("ERROR: LOG.CSV NON EXISTENT");
   }
 
 
@@ -503,36 +512,40 @@ void loop() {
   alt = bmp.readAltitude(seaLevelhPa);
   //cut 1
   if((alt >= CUT_1_ALT || millis() >= CUT_1_TIMER) && cut_1_progress == 0){
-    Serial.println("Cutting 1 begun...");
+    Serial.println("Cut 1 begun...");
     cut_1_progress = 1; // in progress
-    start_1_time = millis();
+    cut_1_start_time = millis();
     digitalWrite(CUT_1_PIN, HIGH);
   }
-  if(cut_1_progress == 1 && (millis()-start_1_time) >= CUT_TIME){
+  if(cut_1_progress == 1 && (millis()-cut_1_start_time) >= CUT_1_LEN){
     cut_1_progress = 2; // complete
     digitalWrite(CUT_1_PIN, LOW);
-    Serial.println("...cutting 1 complete.");
+    Serial.println("...cut 1 complete.");
   }
   //cut 2
   if((alt >= CUT_2_ALT || millis() >= CUT_2_TIMER) && cut_2_progress == 0){
-      Serial.println("Cutting 2 begun...");
+      Serial.println("Cut 2 begun...");
       cut_2_progress = 1; // in progress
-      start_2_time = millis();
+      cut_2_start_time = millis();
       digitalWrite(CUT_2_PIN, HIGH);
   }
-  if(cut_2_progress == 1 && (millis()-start_2_time) >= CUT_TIME){
+  if(cut_2_progress == 1 && (millis()-cut_2_start_time) >= CUT_2_LEN){
       cut_2_progress = 2; // complete
       digitalWrite(CUT_2_PIN, LOW);
-      Serial.println("...cutting 2 complete.");
+      Serial.println("...cut 2 complete.");
   }
-
-  /*
-  //Add more cutdowns here
-  */
-
-  //Serial.println(millis()-start__time);
-
-  delay(250); // get rid of this?
+  //cut 3
+  if((millis() >= CUT_3_TIMER) && cut_3_progress == 0){
+      Serial.println("Cut 3 begun...");
+      cut_3_progress = 1; // in progress
+      cut_3_start_time = millis();
+      digitalWrite(CUT_3_PIN, HIGH);
+  }
+  if(cut_3_progress == 1 && (millis()-cut_3_start_time) >= CUT_3_LEN){
+      cut_3_progress = 2; // complete
+      digitalWrite(CUT_3_PIN, LOW);
+      Serial.println("...cut 3 complete.");
+  }
 }
 
 //---Helper code----------------------------------------------------------------------------------------------

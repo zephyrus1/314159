@@ -335,10 +335,6 @@ void gps_get_position() {
     lon_dec=(labs(lon) % 10000000)/10;
     lat_int=abs(lat/10000000);
     lat_dec=(labs(lat) % 10000000)/10;
-    Serial.println(lon_int);
-    Serial.println(lon_dec);
-    Serial.println(lat_int);
-    Serial.println(lat_dec);
 
     latitude_ = 0;
     longitude_ = 0;
