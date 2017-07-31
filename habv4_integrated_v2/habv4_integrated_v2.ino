@@ -64,8 +64,8 @@
 //---Modifiable Variables---------------------------------------------------------------------------------------------------------
 
 // TX and RX activation
-#define APRS    // Comment to turn off APRS
-//#define LOS     // Comment to turn off LOS (line of sight)
+//#define APRS    // Comment to turn off APRS
+#define LOS     // Comment to turn off LOS (line of sight)
 #define GPS     // Comment to turn off GPS
 
 // TX variables
@@ -77,21 +77,21 @@ char callsign[9] = "KC3JLF";  // LOS callsign, MAX 9 CHARACTERS
 
 // Cut variables
 float seaLevelhPa = 1016.8; // pressure at sea level, hPa (yes, hectopascals)
-const float CUT_1_ALT = 370; //24615; // cut altitude, m -- 80,000 feet
-const float CUT_2_ALT = 375; //27692; //90,000 for reflector
+const float CUT_1_ALT = 350; //24615; // cut altitude, m -- 80,000 feet
+const float CUT_2_ALT = 350; //27692; //90,000 for reflector
 
-const int CUT_1_LEN = 10; // cut duration, sec
-const int CUT_2_LEN = 10; // cut duration, sec
-const int CUT_3_LEN = 10; // cut duration, sec
+const int CUT_1_LEN = 8; // cut duration, sec
+const int CUT_2_LEN = 8; // cut duration, sec
+const int CUT_3_LEN = 8; // cut duration, sec
 
 const unsigned long CUT_1_TIMER = -1; // max countdown until cut, secs
 const unsigned long CUT_2_TIMER = -1; // max countdown until cut, secs
-const unsigned long CUT_3_TIMER = 300; // max countdown until cutn, secs
+const unsigned long CUT_3_TIMER = -1; // max countdown until cut, secs
 
 // Advanced TX variables (not recommeneded for modification)
 #define ASCII 7          // ASCII 7 or 8
 #define STOPBITS 2       // Either 1 or 2
-#define RTTY_BAUD 100     // RTTY Baud rate (Recommended = 50)
+#define RTTY_BAUD 50     // RTTY Baud rate (Recommended = 50)
 #define BAUD_RATE      (1200)
 #define TABLE_SIZE     (512)
 #define PREAMBLE_BYTES (50)
@@ -102,6 +102,8 @@ const unsigned long CUT_3_TIMER = 300; // max countdown until cutn, secs
 //---Private Variables---------------------------------------------------------------------------------------------------------
 
 //Nichrome cutters
+int alt_bmp;
+
 const int CUT_1_PIN = 22;
 const int CUT_2_PIN = 23;
 const int CUT_3_PIN = 24;
@@ -250,7 +252,7 @@ void setup()  {
   digitalWrite(LED_OK, LOW);
 
   Serial.begin(9600);
-  Serial.println(CUT_3_TIMER);
+
 #ifdef LOS
   setMTX2Frequency();
   digitalWrite(MTX2_ENABLE, HIGH);
@@ -336,99 +338,100 @@ void setup()  {
   wait(1000);
 
   //Begin RTTY interrupt TIMER1
+#ifdef LOS
   initialise_interrupt();
+#endif LOS
 }
 
 //---Loop---------------------------------------------------------------------------------------------------------
 
 void loop() {
-  //---Serial information
+
   Serial.println(millis()/1000);
-  //---
-  
+
+  //---Update and Transmit---
+    
   oldhour = hour;
   oldminute = minute;
   oldsecond = second;
 
   //GPS update
-#ifdef GPS
-  gps_check_nav();
-#endif
+  #ifdef GPS
+    gps_check_nav();
+  #endif
 
   //APRS send, NOTE: needs sufficient satellite count
-#ifdef APRS
-  if (sats >= 4) { //MODIFIED
-    if (aprs_tx_status == 0)
-    {
-      startTime = millis();
-      aprs_tx_status = 1;
+  #ifdef APRS
+    if (sats >= 4) { //MODIFIED
+      if (aprs_tx_status == 0)
+      {
+        startTime = millis();
+        aprs_tx_status = 1;
+      }
+      if (millis() - startTime > (APRS_TX_INTERVAL * 1000)) {
+        aprs_tx_status = 0;
+        send_APRS();
+        Serial.println("Sent APRS.");
+        aprs_attempts++;
+      }
     }
-    if (millis() - startTime > (APRS_TX_INTERVAL * 1000)) {
-      aprs_tx_status = 0;
-      send_APRS();
-      Serial.println("Sent APRS.");
-      aprs_attempts++;
-    }
-  }
-#endif
+  #endif
 
   //GPS checks
-#ifdef GPS
-  if (lock != 3) { // Blink LED to indicate no lock
-    errorstatus |= (1 << 5); // Set bit 5 (Lock 0 = GPS Locked 1= Not Locked)
-  }
-  else {
-    errorstatus &= ~(1 << 5); // Unset bit 5 (Lock 0 = GPS Locked 1= Not Locked)
-  }
-  checkDynamicModel();
-
-  //Powersaving mode
-#ifdef POWERSAVING
-  if ((lock == 3) && (psm_status == 0) && (sats >= 5) && ((errorstatus & (1 << 0)) == 0) && ((errorstatus & (1 << 1)) == 0)) { // Check we aren't in an error condition
-    setGPS_PowerSaveMode();
-    wait(1000);
-    psm_status = 1;
-    errorstatus &= ~(1 << 4); // Set Bit 4 Indicating PSM is on
-  }
-#endif
-
-  if (!lockvariables) {
-    prepare_data();
-    if (alt > maxalt && sats >= 4)
-    {
-      maxalt = alt;
+  #ifdef GPS
+      if (lock != 3) { // Blink LED to indicate no lock
+        errorstatus |= (1 << 5); // Set bit 5 (Lock 0 = GPS Locked 1= Not Locked)
+      }
+      else {
+        errorstatus &= ~(1 << 5); // Unset bit 5 (Lock 0 = GPS Locked 1= Not Locked)
+      }
+      checkDynamicModel();
+  
+    //Powersaving mode
+    #ifdef POWERSAVING
+      if ((lock == 3) && (psm_status == 0) && (sats >= 5) && ((errorstatus & (1 << 0)) == 0) && ((errorstatus & (1 << 1)) == 0)) { // Check we aren't in an error condition
+        setGPS_PowerSaveMode();
+        wait(1000);
+        psm_status = 1;
+        errorstatus &= ~(1 << 4); // Set Bit 4 Indicating PSM is on
+      }
+    #endif
+  
+    if (!lockvariables) {
+      prepare_data();
+      if (alt > maxalt && sats >= 4)
+      {
+        maxalt = alt;
+      }
     }
-  }
-  if ((oldhour == hour && oldminute == minute && oldsecond == second) || sats <= 4) {
-    tslf++;
-  }
-  else {
-    tslf = 0;
-    errorstatus &= ~(1 << 0); // Unset bit 0 (Clear GPS Error Condition Noted Switch to Max Performance Mode)
-    errorstatus &= ~(1 << 1); // Unset bit 1 (Clear GPS Error Condition Noted Cold Boot GPS)
-  }
-  if ((tslf > 10 && ((errorstatus & (1 << 0)) == 0) && ((errorstatus & (1 << 1)) == 0))) {
-    setupGPS();
-    wait(125);
-    setGps_MaxPerformanceMode();
-    wait(125);
-    errorstatus |= (1 << 0); // Set Bit 1 (GPS Error Condition Noted Switch to Max Performance Mode)
-    psm_status = 0;
-    errorstatus |= (1 << 4); // Set Bit 4 (Indicate PSM is disabled)
-  }
-  if (tslf > 100 && ((errorstatus & (1 << 0)) == 1) && ((errorstatus & (1 << 1)) == 0)) {
-    errorstatus |= (1 << 0); // Unset Bit 0 we've already tried that didn't work
-    errorstatus |= (1 << 1); // Set bit 1 indicating we are cold booting the GPS
-    Serial.flush();
-    resetGPS();
-    wait(125);
-    setupGPS();
-  }
-#endif GPS
+    if ((oldhour == hour && oldminute == minute && oldsecond == second) || sats <= 4) {
+      tslf++;
+    }
+    else {
+      tslf = 0;
+      errorstatus &= ~(1 << 0); // Unset bit 0 (Clear GPS Error Condition Noted Switch to Max Performance Mode)
+      errorstatus &= ~(1 << 1); // Unset bit 1 (Clear GPS Error Condition Noted Cold Boot GPS)
+    }
+    if ((tslf > 10 && ((errorstatus & (1 << 0)) == 0) && ((errorstatus & (1 << 1)) == 0))) {
+      setupGPS();
+      wait(125);
+      setGps_MaxPerformanceMode();
+      wait(125);
+      errorstatus |= (1 << 0); // Set Bit 1 (GPS Error Condition Noted Switch to Max Performance Mode)
+      psm_status = 0;
+      errorstatus |= (1 << 4); // Set Bit 4 (Indicate PSM is disabled)
+    }
+    if (tslf > 100 && ((errorstatus & (1 << 0)) == 1) && ((errorstatus & (1 << 1)) == 0)) {
+      errorstatus |= (1 << 0); // Unset Bit 0 we've already tried that didn't work
+      errorstatus |= (1 << 1); // Set bit 1 indicating we are cold booting the GPS
+      Serial.flush();
+      resetGPS();
+      wait(125);
+      setupGPS();
+    }
+  #endif GPS
 
-  /*
-    Data gathering for CSV
-  */
+  //---Data Logging---
 
   data = "";
 
@@ -490,15 +493,19 @@ void loop() {
   }
 
   if (dof.magGetOrientation(SENSOR_AXIS_Z, &mag_event, &orientation)) {
-    data = data + String(orientation.heading);
+    data = data + String(orientation.heading) + ',';
   }
   else {
     data = data + "N/A";
   }
+  data = data + String(cut_1_progress)        + ',';
+  data = data + String(cut_2_progress)        + ',';
+  data = data + String(cut_3_progress);
 
-  Serial.println(String(data)); //data = hour:minute:second,millis,lat(deg),lon(deg),GPS alt(m),external sensor temp(C),pressure(hPa),barometer alt (m),x_accel,y_accel,z_accel,x_mag,y_mag,z_mag,z_rate,y_rate,x_rate,roll,pitch,yaw
+  Serial.println(String(data)); //data = hour:minute:second,millis,lat(deg),lon(deg),GPS alt(m),number of sats,external sensor temp(C),pressure(hPa),barometer alt (m),x_accel,y_accel,z_accel,x_mag,y_mag,z_mag,z_rate,y_rate,x_rate,roll,pitch,yaw,cut1,cut2,cut3
 
-  //Write to SD card
+  //---Write to SD---
+  
   if(SD.exists("log.csv")) {
     if(logFile = SD.open("log.csv", FILE_WRITE)){
         logFile.println(data);
@@ -513,29 +520,16 @@ void loop() {
   }
 
 
-  //Nichrome cutter code
-  alt = bmp.readAltitude(seaLevelhPa);
+  //---Nichrome Cutter Control---
+  
+  alt_bmp = bmp.readAltitude(seaLevelhPa);
   
   //cut 1
-  if((alt >= CUT_1_ALT || millis()/1000 >= CUT_1_TIMER) && cut_1_progress == 0) {
+  if((alt_bmp >= CUT_1_ALT || millis()/1000 >= CUT_1_TIMER) && cut_1_progress == 0) {
     Serial.println("Cut 1 begun...");
     cut_1_progress = 1; // in progress
     cut_1_start_time = millis()/1000;
     digitalWrite(CUT_1_PIN, HIGH);
-
-    //record to SD
-    if (SD.exists("log.csv")) {
-      if (logFile = SD.open("log.csv", FILE_WRITE)) {
-        logFile.println("Cut 1 begun...");
-        logFile.close();
-      }
-      else {
-        Serial.println("ERROR: UNABLE TO OPEN LOG FILE");
-      }
-    }
-    else {
-      Serial.println("ERROR: LOG.CSV NON EXISTENT");
-    } 
   }
   else if(cut_1_progress == 1 && (millis()/1000 - cut_1_start_time) >= CUT_1_LEN) {
     cut_1_progress = 2; // complete
@@ -543,7 +537,7 @@ void loop() {
     Serial.println("...cut 1 complete.");
   }
   //cut 2
-  if((alt >= CUT_2_ALT || millis()/1000 >= CUT_2_TIMER) && cut_2_progress == 0) {
+  if((alt_bmp >= CUT_2_ALT || millis()/1000 >= CUT_2_TIMER) && cut_2_progress == 0) {
       Serial.println("Cut 2 begun...");
       cut_2_progress = 1; // in progress
       cut_2_start_time = millis()/1000;
@@ -593,6 +587,7 @@ void prepare_data() {
   {
     sensors.requestTemperatures();
     temperature1 = sensors.getTempCByIndex(0);
+    alt_bmp = bmp.readAltitude(seaLevelhPa);
     if (tempsensors == 2)
     {
       temperature2 = sensors.getTempCByIndex(1);

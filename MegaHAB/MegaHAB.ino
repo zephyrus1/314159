@@ -76,16 +76,16 @@ char callsign[9] = "KC3JLF";  // LOS callsign, MAX 9 CHARACTERS
 #define TXDELAY 0        // Delay between sentence TX's
 
 // Cut variables
-float seaLevelhPa = 1016.8; // pressure at sea level, hPa (yes, hectopascals)
-const float CUT_1_ALT = 350; //21336; // cut altitude, m (70,000 ft CRAM)
-const float CUT_2_ALT = 360; //27432; // cut altitude, m (90,000 ft for reflector)
+float seaLevelhPa = 1016.8 // pressure at sea level, hPa (yes, hectopascals) UPDATE BEFORE LAUNCH
+const float CUT_1_ALT = 21336; // cut altitude, m (70,000 ft CRAM)
+const float CUT_2_ALT = 27432; // cut altitude, m (90,000 ft for reflector)
 
-const int CUT_1_LEN = 10; //30; // cut duration, sec
-const int CUT_2_LEN = 10; //30; // cut duration, sec
-const int CUT_3_LEN = 10; // cut duration, sec
+const int CUT_1_LEN = 20; //30; // cut duration, sec
+const int CUT_2_LEN = 20; //30; // cut duration, sec
+const int CUT_3_LEN = 20; // cut duration, sec
 
-const unsigned long CUT_1_TIMER = 10; // max countdown until cut, secs
-const unsigned long CUT_2_TIMER = -1; //max countdown until cut, secs
+const unsigned long CUT_1_TIMER = 7200; // max countdown until cut, secs (115 min based on prediction +10, +5)
+const unsigned long CUT_2_TIMER = 9000; //max countdown until cut, secs (145 min based on prediction +10 +5)
 const unsigned long CUT_3_TIMER = 25200; //-1; //max countdown until cut, secs
 
 // Advanced TX variables (not recommeneded for modification)
