@@ -84,8 +84,8 @@ const int CUT_1_LEN = 20; //30; // cut duration, sec
 const int CUT_2_LEN = 20; //30; // cut duration, sec
 const int CUT_3_LEN = 20; // cut duration, sec
 
-const unsigned long CUT_1_TIMER = 7200; // max countdown until cut, secs (115 min based on prediction +10, +5)
-const unsigned long CUT_2_TIMER = 9000; //max countdown until cut, secs (145 min based on prediction +10 +5)
+const unsigned long CUT_1_TIMER = 7200; // max countdown until cut, secs (105 min based on prediction +10, +5)
+const unsigned long CUT_2_TIMER = 9000; //max countdown until cut, secs (135 min based on prediction +10 +5)
 const unsigned long CUT_3_TIMER = 25200; //-1; //max countdown until cut, secs
 
 // Advanced TX variables (not recommeneded for modification)
