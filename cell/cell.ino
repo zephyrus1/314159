@@ -25,7 +25,7 @@
 
 const int chipSelect = 10;
 const int voltPin = 8; // -> 37
-const float MAXVOLTS = 35.00; //Must match voltage circuit resistors
+const float MAXVOLTS = 70.00; //Must match voltage circuit resistors
 float voltage = 0.0;
 
 void setup() {
@@ -73,12 +73,3 @@ void loop() {
   }
   delay(2000);
 }
-
-
-
-
-
-
-
-
-
