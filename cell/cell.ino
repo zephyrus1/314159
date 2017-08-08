@@ -50,9 +50,7 @@ void setup() {
     Serial.println("error");
     while(1);
   }
-  File dataFile = SD.open("voltlog.csv", FILE_WRITE);
-  dataFile.println("runnign time secs,voltage, temp C,elevation m");
-  Serial.println("Done Initializing BMP\n");
+
 
 
   Serial.print("Initializing SD card...");
@@ -64,6 +62,10 @@ void setup() {
     while(1);
   }
   Serial.println("card initialized.");
+  File dataFile = SD.open("voltlog.csv", FILE_WRITE);
+  dataFile.println("running time secs,voltage, temp C,elevation m");
+  dataFile.close();
+  Serial.println("Done Initializing BMP\n");
 }
 
 void loop() {
