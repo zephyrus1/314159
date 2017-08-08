@@ -42,6 +42,6 @@ Summer 2017
     Users will only need to change the contents of the setup and loop functions to customize the software based on the sensors used and the data to be recorded
    
     
-##Cell:
+## Cell:
 
     Code to measure the voltage outputted by a solar cell (not needed for balloon flight)
