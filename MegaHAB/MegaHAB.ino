@@ -70,19 +70,20 @@
 
 // TX variables
 #define MTX2_FREQ 434.485 // LOS frequency, format 434.XXX
-#define APRS_CALLSIGN "KC3JLF" // APRS callsign
-char callsign[9] = "KC3JLF";  // LOS callsign, MAX 9 CHARACTERS
+#define APRS_CALLSIGN "CALLSIGN" // APRS callsign
+char callsign[9] = "CALLSIGN";  // LOS callsign, MAX 9 CHARACTERS
 #define POWERSAVING      // Enables GPS powersaving mode
 #define TXDELAY 0        // Delay between sentence TX's
+int APRS_TX_INTERVAL = 79000;  // APRS TX interval in seconds
 
 // Cut variables
-float seaLevelhPa = 1016.8 // pressure at sea level, hPa (yes, hectopascals) UPDATE BEFORE LAUNCH
+float seaLevelhPa = 1016.8; // pressure at sea level, hPa (yes, hectopascals or mbar) UPDATE BEFORE LAUNCH
 const float CUT_1_ALT = 21336; // cut altitude, m (70,000 ft CRAM)
 const float CUT_2_ALT = 27432; // cut altitude, m (90,000 ft for reflector)
 
-const int CUT_1_LEN = 20; //30; // cut duration, sec
-const int CUT_2_LEN = 20; //30; // cut duration, sec
-const int CUT_3_LEN = 20; // cut duration, sec
+const int CUT_1_LEN = 25; //30; // cut duration, sec
+const int CUT_2_LEN = 25; //30; // cut duration, sec
+const int CUT_3_LEN = 25; // cut duration, sec
 
 const unsigned long CUT_1_TIMER = 7200; // max countdown until cut, secs (105 min based on prediction +10, +5)
 const unsigned long CUT_2_TIMER = 9000; //max countdown until cut, secs (135 min based on prediction +10 +5)
@@ -368,7 +369,7 @@ void loop() {
       startTime = millis();
       aprs_tx_status = 1;
     }
-    if (millis() - startTime > (APRS_TX_INTERVAL * 1000)) {
+    if (millis() - startTime > (APRS_TX_INTERVAL)) {
       aprs_tx_status = 0;
       send_APRS();
       Serial.println("Sent APRS.");

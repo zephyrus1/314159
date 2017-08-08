@@ -19,7 +19,6 @@
 
 #ifndef __AX25MODEM_H
 #define __AX25MODEM_H
-#define APRS_TX_INTERVAL 79  // APRS TX interval in seconds
 #define APRS_SSID     (11)
 
 extern void ax25_init(void);
