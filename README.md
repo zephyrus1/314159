@@ -1,4 +1,5 @@
-# 314159         Edited by Keenan Albee and Seth Eisner
+# 314159
+## Keenan Albee and Seth Eisner
 
 Adapted from [HABduino v4](https://github.com/HABduino/HABduino/tree/master/Software/habduino_v4)
 
