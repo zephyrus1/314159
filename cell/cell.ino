@@ -22,6 +22,16 @@
 
 #include <SPI.h>
 #include <SD.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BMP280.h>
+
+
+Adafruit_BMP280 bmp;
+
+#define BMP_SCK 13
+#define BMP_MISO 12
+#define BMP_MOSI 11
+#define BMP_CS 10
 
 const int chipSelect = 10;
 const int voltPin = 8; // -> 37
@@ -34,6 +44,15 @@ void setup() {
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
+  Serial.println("Initializing BMP\n");
+  if (!bmp.begin()) {
+    //Begin the sensor
+    Serial.println("error");
+    while(1);
+  }
+  File dataFile = SD.open("voltlog.csv", FILE_WRITE);
+  dataFile.println("runnign time secs,voltage, temp C,elevation m");
+  Serial.println("Done Initializing BMP\n");
 
 
   Serial.print("Initializing SD card...");
@@ -51,14 +70,21 @@ void loop() {
   // make a string for assembling the data to log:
   String dataString = "";
 
-  Serial.println(String(analogRead(voltPin)));
+  float temperature = bmp.readTemperature();
+
+ float elevation = bmp.readAltitude (1011);
+ //Serial.println(String(temperature)+ '\t' + String(elevation));
+
+  //Serial.println(String(analogRead(voltPin)));
   voltage = (float)analogRead(voltPin) * (MAXVOLTS / 1024.0);
   dataString = String(millis()/1000)+',';
-  dataString += String(voltage, 1) + 'V';
+  dataString += String(voltage, 1) + ',';
+  dataString += String(temperature,1) + ',';
+  dataString += String(elevation,1) ;
 
   // open the file. note that only one file can be open at a time,
   // so you have to close this one before opening another.
-  File dataFile = SD.open("voltlog.txt", FILE_WRITE);
+  File dataFile = SD.open("voltlog.csv", FILE_WRITE);
 
   // if the file is available, write to it:
   if (dataFile) {
