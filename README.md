@@ -15,6 +15,8 @@ MegaHAB:
           Adafruit MicroSD card breakout board+
           ...And their related libraries
           
+    Varialble APRS_CALLSIGN needs to be changed to the user's radio (HAM) callsign 
+    Variable seaLevelhPa is used for the barometer (BMP280)
     Records Time data, latitude, longitude, GPS altitude, temperature, barometer altitude, XYZ accel magnetism and gyro data, and the state of each of the three cutters.
     Code makes use of 3 relay controlled cutters to make certain things happen at set altitudes.
         1 and 2 are for science payloads and 3 is the emergency cutdown using relays 
@@ -36,6 +38,8 @@ MegaHAB:
 | 1     | 22    | 4     | 4     |
 | 2     | 23    | 5     | 3     |
 | 3     | 24    | 6     | 2     |
+
+    Users will only need to change the contents of the setup and loop functions to customize the software based on the sensors used and the data to be recorded
    
     
 Cell:
