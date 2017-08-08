@@ -1,11 +1,10 @@
-# 314159
-## Keenan Albee and Seth Eisner
+# 314159 Keenan Albee and Seth Eisner
 
 Adapted from [HABduino v4](https://github.com/HABduino/HABduino/tree/master/Software/habduino_v4)
 
 Summer 2017
 
-MegaHAB:
+## MegaHAB:
 
     High Altitude Balloon flight software adopted for use on an Arduino Mega.
     Combines GPS and APRS for use on the same Mega
@@ -43,6 +42,6 @@ MegaHAB:
     Users will only need to change the contents of the setup and loop functions to customize the software based on the sensors used and the data to be recorded
    
     
-Cell:
+##Cell:
 
     Code to measure the voltage outputted by a solar cell (not needed for balloon flight)
