@@ -31,7 +31,7 @@ MegaHAB:
         2 = done cutting
     cut_1_start_time doesnt need to be changed as it's set by the program. Ensures that the cutter runs.
     | Cutter Number | Mega Pin | Shield Pin | COM (the green things) | 
-    |---|---|---|---|
+    | --- | --- | --- | --- |
     | 1 | 22 | 4 | 4 |
     | 2 | 23 | 5 | 3 |
     | 3 | 24 | 6 | 2 |
