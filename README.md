@@ -6,7 +6,8 @@ Summer 2017
 
 ## MegaHAB:
 
-    High Altitude Balloon flight software adopted for use on an Arduino Mega.
+**High Altitude Balloon flight software adopted for use on an Arduino Mega.**
+
     Combines GPS and APRS for use on the same Mega
     Uses: 
           Arduino Relay Shield 3.0 for cutting
