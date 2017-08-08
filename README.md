@@ -14,8 +14,7 @@ MegaHAB:
           Adafruit MicroSD card breakout board+
           ...And their related libraries
           
-    Records Time data, latitude, longitude, GPS altitude, temperature, barometer altitude, XYZ accel magnetism and gyro data, and the state of each of the three cutters
-    
+    Records Time data, latitude, longitude, GPS altitude, temperature, barometer altitude, XYZ accel magnetism and gyro data, and the state of each of the three cutters.
     Code makes use of 3 relay controlled cutters to make certain things happen at set altitudes
         1 and 2 are for science payloads and 3 is the emergency cutdown using relays 
         cutter 1 COM 4
