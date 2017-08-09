@@ -105,17 +105,17 @@ const unsigned long CUT_3_TIMER = 25200; //-1; //max countdown until cut, secs
 //Nichrome cutters
 int alt_bmp;
 
-const int CUT_1_PIN = 22;
-const int CUT_2_PIN = 23;
-const int CUT_3_PIN = 24;
+const int CUT_1_PIN = 22; //arduino pins that get set high to cut
+const int CUT_2_PIN = 23; //      ''
+const int CUT_3_PIN = 24; //      ''
 
 int cut_1_progress = 0; //0 = not started, 1 = in progress, 2 = done
 int cut_2_progress = 0; //0 = not started, 1 = in progress, 2 = done
 int cut_3_progress = 0; //0 = not started, 1 = in progress, 2 = done
 
-long cut_1_start_time = 0;
-long cut_2_start_time = 0;
-long cut_3_start_time = 0;
+long cut_1_start_time = 0;  //Initial value doesn't matter, so just leave them at zero
+long cut_2_start_time = 0;  //                ''
+long cut_3_start_time = 0;  //                ''
 
 //Sensors
 #include <Wire.h>
@@ -152,14 +152,15 @@ String data = "";
 float latitude_  = -999.0;
 float longitude_ = -999.0;
 long  altitude_  = -999;
-
+/*  Sensor objects used to access sensor data  */
 Adafruit_L3GD20_Unified         gyro  = Adafruit_L3GD20_Unified(20); //gyro
 Adafruit_BMP280                 bmp;                  //temp and pres
 Adafruit_LSM303                 lsm;                  //accel and mag
 Adafruit_9DOF                   dof   = Adafruit_9DOF();
 Adafruit_LSM303_Accel_Unified   accel = Adafruit_LSM303_Accel_Unified(30301);
 Adafruit_LSM303_Mag_Unified     mag   = Adafruit_LSM303_Mag_Unified(30302);
-const int chipSelect = 53;
+
+const int chipSelect = 53;  //chipselect for SD card reader (CS pin on Adafruit board)
 
 #define BATTERY_ADC A0
 #define GPS_ON 2
