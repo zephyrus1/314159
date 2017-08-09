@@ -45,4 +45,4 @@ Summer 2017
 
     Code to measure the voltage outputted by a solar cell (not needed for balloon flight)
     Arduino can only read up to 5 Volts, so the circuit to implement the code uses a voltage divider with a 1KΩ across the output voltage
-        and 13KΩ as the other resistor. The Arduino measures the output voltage.
+        and 13KΩ as the other resistor. This allows the Arduino to measure voltages up to 70 Volts (as defined in the code).
