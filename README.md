@@ -27,9 +27,9 @@ Summer 2017
     CUT_#_TIMER is the redundant trigger for the cutter. The cutter will trigger, no matter the altitude, if the internal timer is greater than or equal to the set value. In seconds.
     CUT_#_PIN is the pin on the mega that the corresponds to the cutter specified by the #
     cut_#_progress is the state of the cutter specified by #
-        0 = not started
-        1 = in progress
-        2 = done cutting
+        state 0 = not started
+        state 1 = in progress
+        state 2 = done cutting
     cut_1_start_time doesnt need to be changed as it's set by the program. Ensures that the cutter runs.
 | Cutter Number | Mega Pin | Shield Pin | COM (the green things) | 
 | :---: | :---: | :---: | :---: |
@@ -45,4 +45,4 @@ Summer 2017
 
     Code to measure the voltage outputted by a solar cell (not needed for balloon flight)
     Arduino can only read up to 5 Volts, so the circuit to implement the code uses a voltage divider with a 1KΩ across the output voltage
-        and 13KΩ as the other resistor. This allows the Arduino to measure voltages up to 70 Volts (as defined in the code).
+        and 13KΩ as the other resistor. This allows the Arduino to measure voltages up to 70 Volts (as defined in the code in the variable MAXVOLTS).
