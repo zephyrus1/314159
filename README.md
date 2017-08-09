@@ -41,7 +41,8 @@ Summer 2017
    
     
 ## SolarCellControl:
+[Adopted from this.](http://www.instructables.com/id/Arduino-Solar-Cell-Tester/)
 
     Code to measure the voltage outputted by a solar cell (not needed for balloon flight)
     Arduino can only read up to 5 Volts, so the circuit to implement the code uses a voltage divider with a 1KΩ across the output voltage
-        and 13KΩ as the other resistor. The Arduino measures the output voltage. [Adopted from this.](http://www.instructables.com/id/Arduino-Solar-Cell-Tester/)
+        and 13KΩ as the other resistor. The Arduino measures the output voltage.
