@@ -6,7 +6,7 @@ Summer 2017
 
 ## MegaHAB:
 
-**High Altitude Balloon flight software adopted for use on an Arduino Mega.**
+**High Altitude Balloon flight software for use on an Arduino Mega.**
 
     Combines GPS and APRS for use on the same Mega
     Uses: 
@@ -40,6 +40,6 @@ Summer 2017
     Users will only need to change the contents of the setup and loop functions to customize the software based on the sensors used and the data to be recorded
    
     
-## Cell:
+## SolarCellControl:
 
     Code to measure the voltage outputted by a solar cell (not needed for balloon flight)
