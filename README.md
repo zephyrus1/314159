@@ -22,7 +22,7 @@ Summer 2017
     Code makes use of 3 relay controlled cutters to make certain things happen at set altitudes.
     Cutter 1 and 2 are for science payloads and 3 is the emergency cutdown using relays 
         
-    CUT_#_ALT is the desired altituded the cutting happens.
+    CUT_#_ALT is the desired altituded the cutting happens at.
     CUT_#_LEN is the desired duration of the cut (time cutter is on) in seconds.
     CUT_#_TIMER is the redundant trigger for the cutter. The cutter will trigger, no matter the altitude, if the internal timer is greater than or equal to the set value. In seconds.
     CUT_#_PIN is the pin on the mega that the corresponds to the cutter specified by the #
