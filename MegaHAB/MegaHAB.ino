@@ -527,7 +527,7 @@ void loop() {
   alt_bmp = bmp.readAltitude(seaLevelhPa);
   
   //cut 1
-  if((alt_bmp >= CUT_1_ALT || millis()/1000 >= CUT_1_TIMER) && cut_1_progress == 0) {
+  if((altitide_ >= CUT_1_ALT || millis()/1000 >= CUT_1_TIMER) && cut_1_progress == 0) {
     Serial.println("Cut 1 begun...");
     cut_1_progress = 1; // in progress
     cut_1_start_time = millis()/1000;
@@ -539,7 +539,7 @@ void loop() {
     Serial.println("...cut 1 complete.");
   }
   //cut 2
-  if((alt_bmp >= CUT_2_ALT || millis()/1000 >= CUT_2_TIMER) && cut_2_progress == 0) {
+  if((altitude_ >= CUT_2_ALT || millis()/1000 >= CUT_2_TIMER) && cut_2_progress == 0) {
       Serial.println("Cut 2 begun...");
       cut_2_progress = 1; // in progress
       cut_2_start_time = millis()/1000;
